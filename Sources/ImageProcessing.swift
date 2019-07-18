@@ -328,8 +328,9 @@ extension ImageProcessor {
 
         /// Applies `CIGaussianBlur` filter to the image.
         public func process(image: Image, context: ImageProcessingContext?) -> Image? {
-            let filter = CIFilter(name: "CIGaussianBlur", parameters: ["inputRadius": radius])
-            return CoreImageFilter.apply(filter: filter, to: image)
+//            let filter = CIFilter(name: "CIGaussianBlur", parameters: ["inputRadius": radius])
+//            return CoreImageFilter.apply(filter: filter, to: image)
+            return blur(image: image, radius: radius)
         }
 
         public var identifier: String {
@@ -342,6 +343,24 @@ extension ImageProcessor {
 
         public var description: String {
             return "GaussianBlur(radius: \(radius))"
+        }
+        
+        /// Temp solution until it will be fixed in the main repo
+        private func blur(image: UIImage, radius: Int) -> UIImage {
+            let context = CIContext(options: nil)
+            let blurFilter = CIFilter(name: "CIGaussianBlur")
+            let ciImage = CIImage(image: image)
+            blurFilter!.setValue(ciImage, forKey: kCIInputImageKey)
+            blurFilter!.setValue(radius, forKey: kCIInputRadiusKey)
+            
+            let cropFilter = CIFilter(name: "CICrop")
+            cropFilter!.setValue(blurFilter!.outputImage, forKey: kCIInputImageKey)
+            cropFilter!.setValue(CIVector(cgRect: ciImage!.extent), forKey: "inputRectangle")
+            
+            let output = cropFilter!.outputImage
+            let cgimg = context.createCGImage(output!, from: output!.extent)
+            let processedImage = UIImage(cgImage: cgimg!)
+            return processedImage
         }
     }
 }
